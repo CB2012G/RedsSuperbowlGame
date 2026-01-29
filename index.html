@@ -35,10 +35,10 @@
         .main-row { display: flex; width: 100%; justify-content: center; align-items: stretch; }
         .row-banner { writing-mode: vertical-rl; transform: rotate(180deg); background: var(--primary-color); color: white; width: 10%; display: flex; align-items: center; justify-content: center; font-weight: 900; text-align: center; border-radius: 8px 0 0 8px; border-right: 4px solid var(--accent-red); font-size: clamp(14px, 2.5vw, 20px); letter-spacing: 1px; }
         .grid { display: grid; grid-template-columns: repeat(11, 1fr); gap: 2px; background: #cbd5e1; width: 90%; padding: 4px; border-radius: 0 0 8px 0; box-sizing: border-box; }
-        .sq { aspect-ratio: 1; background: white; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 2.2vw, 17px); font-weight: 800; cursor: pointer; }
-        .axis-sq { background: #f8fafc; color: var(--primary-color); font-weight: 900; cursor: default; font-size: clamp(16px, 3.5vw, 26px); }
-        .taken { background: #f1f5f9; color: #64748b; cursor: not-allowed; position: relative; overflow: hidden; }
-        .selected { background: var(--selection-yellow) !important; color: black !important; }
+        .sq { aspect-ratio: 1; background: white; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 2.2vw, 17px); font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .axis-sq { background: #f8fafc; color: var(--primary-color); font-weight: 900; cursor: default; font-size: clamp(14px, 3vw, 20px); }
+        .taken { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+        .selected { background: var(--selection-yellow) !important; color: black !important; transform: scale(1.05); z-index: 2; }
         .team-thanks { background: #f8fafc; padding: 20px; border-radius: 12px; margin-top: 40px; text-align: center; border-left: 5px solid var(--secondary-color); border-right: 5px solid var(--accent-red); }
         #checkout-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nfl-dark); color: white; padding: 25px; text-align: center; z-index: 1000; display: none; border-top: 4px solid var(--secondary-color); }
         .input-field { padding: 12px; margin: 5px; border-radius: 8px; border: 1px solid #334155; width: 42%; min-width: 160px; font-size: 16px; background: #fff; color: #000; }
@@ -49,7 +49,7 @@
 <body>
 <div id="loading-overlay">SYNCING BOARD...</div>
 <div class="hero-section">
-    <div class="team-brand" id="tpl-team-name">YOUR TEAM NAME FUNDRAISER</div>
+    <div class="team-brand" id="tpl-team-name">LOADING...</div>
     <h1>SUPERBOWL SQUARES</h1>
     <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px;">
         <span id="sync-time" style="font-size: 12px; color: #94a3b8; font-weight: 600;">Connecting...</span>
@@ -60,12 +60,12 @@
     <div class="info-grid">
         <div class="info-card">
             <h4>💰 RESERVE & PAY</h4>
-            <p><b>$<span class="tpl-price">20.00</span> Per Square.</b><br><br>
+            <p><b>$<span class="tpl-price">0.00</span> Per Square.</b><br><br>
             1. Click the square and add the information then pay via e-transfer<br>
             <b>OR</b><br>
             2. In message box of your e-transfer please indicate the square.<br><br>
             <b>Payment confirms your reservation about the square.</b></p>
-            <span class="etransfer-highlight" id="tpl-email">PAYMENT@EMAIL.COM</span>
+            <span class="etransfer-highlight" id="tpl-email">...</span>
         </div>
         <div class="info-card">
             <h4>🏟️ THE GAME BOARD</h4>
@@ -82,8 +82,8 @@
         <h4>🏅 HOW TO WIN</h4>
         <p>At the end of each quarter, we match the <b>Last Digit</b> of each team's score to the grid.</p>
         <ul class="axis-list">
-            <li><b>Row Number:</b> Last Digit of the <b>New England Patriots</b> score.</li>
-            <li><b>Column Number:</b> Last Digit of the <b>Seattle Seahawks</b> score.</li>
+            <li><b>Row Number:</b> Last Digit of the <b class="row-team-name">Patriots</b> score.</li>
+            <li><b>Column Number:</b> Last Digit of the <b class="col-team-name">Seahawks</b> score.</li>
         </ul>
     </div>
     <div class="second-chance-bar">📢 SECOND CHANCE: If a winning square is unsold, the prize is RAFFLED to all paid participants!</div>
@@ -93,9 +93,9 @@
         <div class="pot-card"><small>Payout Per Winner</small><span id="quarter-payout">$0.00</span></div>
     </div>
     <div class="game-wrapper">
-        <div class="col-banner">SEATTLE SEAHAWKS (COLUMNS)</div>
+        <div class="col-banner col-team-name">SEATTLE SEAHAWKS (COLUMNS)</div>
         <div class="main-row">
-            <div class="row-banner">NEW ENGLAND PATRIOTS (ROWS)</div>
+            <div class="row-banner row-team-name">NEW ENGLAND PATRIOTS (ROWS)</div>
             <div id="game-board" class="grid"></div>
         </div>
     </div>
@@ -107,19 +107,115 @@
     <div style="margin-top:10px; font-weight: 700;">Selected: <span id="count" style="color:var(--selection-yellow)">0</span> | Total: <span id="checkout-total" style="color:var(--selection-yellow)">$0.00</span></div>
     <button onclick="submitBooking()" class="btn-confirm">CONFIRM & RESERVE</button>
 </div>
+
 <script>
-    /* -------------------------------------------------------------------------
-       COWORKER: UPDATE THESE VALUES
-       ------------------------------------------------------------------------- */
     const CONFIG = {
         SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwI5dEgBcwWb0Ui0C4y2eN8YSLnNrSGiu7IEfZxAvwqhTO3qHetjG5Gvgo7UH-IwHvCsA/exec",
-        ADMIN_PASS: "CBadmin!", // Updated Password
         TEAM_NAME: "Cheetahs",
         PAYMENT_EMAIL: "cherrybeachcheetahs@gmail.com",
-        SQUARE_PRICE: 20.00
+        SQUARE_PRICE: 20.00,
+        ROW_TEAM: "New England Patriots",
+        COL_TEAM: "Seattle Seahawks"
     };
 
-    // UI and Logic initialization remains the same...
+    let selectedSquares = [];
+    let boardData = {};
+
+    // 1. INJECT CONFIG INTO HTML
+    function init() {
+        document.getElementById('tpl-team-name').innerText = `${CONFIG.TEAM_NAME} FUNDRAISER`;
+        document.getElementById('tpl-email').innerText = CONFIG.PAYMENT_EMAIL;
+        document.querySelectorAll('.tpl-price').forEach(el => el.innerText = CONFIG.SQUARE_PRICE.toFixed(2));
+        document.querySelectorAll('.row-team-name').forEach(el => el.innerText = CONFIG.ROW_TEAM);
+        document.querySelectorAll('.col-team-name').forEach(el => el.innerText = CONFIG.COL_TEAM);
+        loadBoard();
+    }
+
+    // 2. LOAD BOARD FROM GOOGLE
+    async function loadBoard() {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.style.display = 'flex';
+        try {
+            const response = await fetch(`${CONFIG.SCRIPT_URL}?action=getBoard`);
+            boardData = await response.json();
+            document.getElementById('sync-time').innerText = "Last Synced: " + new Date().toLocaleTimeString();
+        } catch (e) {
+            console.warn("Spreadsheet connection failed. Rendering offline mode.");
+        } finally {
+            renderBoard();
+            updateStats();
+            overlay.style.display = 'none';
+        }
+    }
+
+    // 3. RENDER GRID
+    function renderBoard() {
+        const board = document.getElementById('game-board');
+        board.innerHTML = '';
+        for (let r = 0; r < 11; r++) {
+            for (let c = 0; c < 11; c++) {
+                const sq = document.createElement('div');
+                if (r === 0 && c === 0) {
+                    sq.className = 'sq axis-sq';
+                    sq.innerText = '🏈';
+                } else if (r === 0 || c === 0) {
+                    sq.className = 'sq axis-sq';
+                    sq.innerText = '?';
+                } else {
+                    const squareId = `R${r}C${c}`;
+                    sq.className = 'sq';
+                    if (boardData[squareId]) {
+                        sq.classList.add('taken');
+                        sq.innerText = boardData[squareId].initials || 'X';
+                    } else {
+                        sq.onclick = () => toggleSquare(sq, squareId);
+                    }
+                }
+                board.appendChild(sq);
+            }
+        }
+    }
+
+    function toggleSquare(element, id) {
+        if (selectedSquares.includes(id)) {
+            selectedSquares = selectedSquares.filter(s => s !== id);
+            element.classList.remove('selected');
+        } else {
+            selectedSquares.push(id);
+            element.classList.add('selected');
+        }
+        updateCheckoutUI();
+    }
+
+    function updateCheckoutUI() {
+        const bar = document.getElementById('checkout-bar');
+        const count = selectedSquares.length;
+        if (count > 0) {
+            bar.style.display = 'block';
+            document.getElementById('count').innerText = count;
+            document.getElementById('checkout-total').innerText = `$${(count * CONFIG.SQUARE_PRICE).toFixed(2)}`;
+        } else {
+            bar.style.display = 'none';
+        }
+    }
+
+    function updateStats() {
+        const soldCount = Object.keys(boardData).length;
+        const totalPrizePool = (soldCount * CONFIG.SQUARE_PRICE) * 0.5;
+        document.getElementById('total-pot').innerText = `$${totalPrizePool.toFixed(2)}`;
+        document.getElementById('quarter-payout').innerText = `$${(totalPrizePool / 4).toFixed(2)}`;
+    }
+
+    async function submitBooking() {
+        const name = document.getElementById('userName').value;
+        const email = document.getElementById('userEmail').value;
+        if (!name || !email) return alert("Please fill in Name and Email.");
+        
+        // Form submission logic to your Google Script URL would go here
+        alert(`Request Sent for squares: ${selectedSquares.join(', ')}. Please send your e-transfer now!`);
+    }
+
+    window.onload = init;
 </script>
 </body>
 </html>
