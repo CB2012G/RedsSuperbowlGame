@@ -55,3 +55,194 @@
         .input-field { padding: 12px; margin: 5px; border-radius: 4px; border: none; width: 42%; min-width: 160px; font-size: 16px; }
         
         .btn-container { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
+        .btn-confirm { background: var(--cb-red); color: white; padding: 15px 30px; border-radius: 6px; font-weight: 900; border: none; cursor: pointer; text-transform: uppercase; font-size: 16px; }
+        .btn-square { background: var(--square-blue); color: white; padding: 15px 30px; border-radius: 6px; font-weight: 900; border: none; cursor: pointer; text-transform: uppercase; text-decoration: none; display: inline-block; font-size: 16px; }
+
+        .thank-you-footer { margin-top: 50px; padding: 30px; border-radius: 8px; background: var(--cb-gray); border-left: 8px solid var(--cb-red); border-right: 8px solid var(--cb-red); text-align: center; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; color: var(--cb-red); font-weight: 800; font-size: 24px; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">SYNCING BOARD...</div>
+
+    <div class="hero-section">
+        <div class="team-brand">CHERRY BEACH CHEETAHS</div>
+        <h1>SUPERBOWL SQUARES</h1>
+        <div style="display: flex; justify-content: center; align-items: center; margin-top: 15px;">
+            <span id="sync-time" style="font-size: 12px; color: #999;">Connecting...</span>
+            <button onclick="loadBoard()" style="background: transparent; border: 1px solid var(--cb-red); color: var(--cb-red); padding: 5px 15px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-left: 10px; font-weight: 700;">REFRESH BOARD</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="info-grid">
+            <div class="info-card">
+                <h4>⚽ RESERVE & PAY</h4>
+                <p><b>$20.00 Per Square</b><br><br> 
+                1. Select square(s) on the grid.<br>
+                2. Enter Name & Email.<br>
+                3. Choose Payment: Square (Instant) or E-transfer to:</p>
+                <span class="etransfer-highlight">cherrybeachcheetahs@gmail.com</span>
+            </div>
+            <div class="info-card">
+                <h4>🏟️ HOW IT WORKS</h4>
+                <p>Numbers 0-9 are assigned randomly once full. Winning square is selected by the last digit of each team's final score.<br><b>Example:</b> Score 14-17 means Row 4, Col 7 wins!</p>
+            </div>
+        </div>
+
+        <div class="pot-tracker">
+            <div class="pot-card"><small>TOTAL COLLECTED</small><br><span id="total-pot">$0.00</span></div>
+            <div class="pot-card"><small>WINNER'S POT (50%)</small><br><span id="quarter-payout">$0.00</span></div>
+        </div>
+
+        <div class="game-wrapper">
+            <div class="col-banner">New England Patriots</div>
+            <div class="main-row">
+                <div class="row-banner">Seattle Seahawks</div>
+                <div id="game-board" class="grid"></div>
+            </div>
+        </div>
+
+        <div class="thank-you-footer">
+            <h3>Thank you for supporting the Cheetahs!</h3>
+            <p>Proceeds directly support team development, tournament, and season costs.</p>
+        </div>
+    </div>
+
+    <div id="checkout-bar">
+        <input type="text" id="userName" class="input-field" placeholder="Player Name">
+        <input type="email" id="userEmail" class="input-field" placeholder="Email Address">
+        <div style="margin-top:10px; font-weight: 700;">Selected: <span id="count" style="color:var(--accent-gold)">0</span> | Total: <span id="checkout-total" style="color:var(--accent-gold)">$0.00</span></div>
+        
+        <div class="btn-container">
+            <button onclick="submitBooking('etransfer')" class="btn-confirm">Reserve (E-transfer)</button>
+            <a href="https://square.link/u/Ee4vucP0?src=embed" id="square-pay-btn" onclick="handleSquarePayment(event)" class="btn-square">Pay Now (Square)</a>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzqIeHzXI66l7nRy0wH6QH2mwqT70no0BuxBbqHVf5IciUzrhAmn4pIaaT3-Um8-E2eAA/exec",
+            SQUARE_PRICE: 20.00
+        };
+
+        let selectedSquares = [];
+        let boardData = {};
+
+        async function loadBoard() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'flex';
+            try {
+                const response = await fetch(`${CONFIG.SCRIPT_URL}?action=getBoard`);
+                boardData = await response.json();
+                document.getElementById('sync-time').innerText = "Last Updated: " + new Date().toLocaleTimeString();
+                renderBoard();
+                updateStats();
+            } finally { overlay.style.display = 'none'; }
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+            for (let r = 0; r < 11; r++) {
+                for (let c = 0; c < 11; c++) {
+                    const sq = document.createElement('div');
+                    if (r === 0 && c === 0) {
+                        sq.className = 'sq axis-sq'; sq.innerText = '🏈';
+                    } else if (r === 0 || c === 0) {
+                        sq.className = 'sq axis-sq';
+                        const axisId = r === 0 ? `COL_${c}` : `ROW_${r}`;
+                        sq.innerText = (boardData[axisId] && typeof boardData[axisId].initials !== 'object') ? boardData[axisId].initials : '?';
+                    } else {
+                        const squareId = `R${r}C${c}`;
+                        sq.className = 'sq';
+                        if (boardData[squareId]) {
+                            sq.classList.add('taken');
+                            sq.innerText = boardData[squareId].initials || 'X';
+                        } else {
+                            sq.onclick = () => toggleSquare(sq, squareId);
+                            if (selectedSquares.includes(squareId)) sq.classList.add('selected');
+                        }
+                    }
+                    board.appendChild(sq);
+                }
+            }
+        }
+
+        function toggleSquare(element, id) {
+            if (selectedSquares.includes(id)) {
+                selectedSquares = selectedSquares.filter(s => s !== id);
+                element.classList.remove('selected');
+            } else {
+                selectedSquares.push(id);
+                element.classList.add('selected');
+            }
+            const bar = document.getElementById('checkout-bar');
+            bar.style.display = selectedSquares.length > 0 ? 'block' : 'none';
+            document.getElementById('count').innerText = selectedSquares.length;
+            document.getElementById('checkout-total').innerText = `$${(selectedSquares.length * CONFIG.SQUARE_PRICE).toFixed(2)}`;
+        }
+
+        function updateStats() {
+            const soldCount = Object.keys(boardData).filter(k => k.startsWith('R') && k.includes('C')).length;
+            document.getElementById('total-pot').innerText = `$${(soldCount * CONFIG.SQUARE_PRICE).toFixed(2)}`;
+            document.getElementById('quarter-payout').innerText = `$${(soldCount * CONFIG.SQUARE_PRICE * 0.5).toFixed(2)}`;
+        }
+
+        // Logic for Square Payment (Checking availability FIRST)
+        async function handleSquarePayment(e) {
+            e.preventDefault();
+            const name = document.getElementById('userName').value.trim();
+            if (!name) return alert("Please enter your name first!");
+
+            // Run the reservation logic first to lock the squares
+            const success = await submitBooking('square_click');
+            if (success) {
+                // Open Square link in a popup window
+                const url = e.target.href;
+                window.open(url, 'Square', 'width=500,height=700');
+            }
+        }
+
+        async function submitBooking(type) {
+            const name = document.getElementById('userName').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            if (!name || !email) { alert("Name and Email required!"); return false; }
+
+            const overlay = document.getElementById('loading-overlay');
+            overlay.innerText = "CHECKING AVAILABILITY...";
+            overlay.style.display = 'flex';
+
+            try {
+                const response = await fetch(`${CONFIG.SCRIPT_URL}?action=getBoard`);
+                const latestBoard = await response.json();
+                let conflict = selectedSquares.filter(id => latestBoard[id]);
+
+                if (conflict.length > 0) {
+                    alert(`Conflict! Squares ${conflict.join(', ')} were just taken.`);
+                    location.reload();
+                    return false;
+                }
+
+                await fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST', mode: 'no-cors',
+                    body: JSON.stringify({ action: 'reserve', name, email, squares: selectedSquares })
+                });
+
+                if (type === 'etransfer') {
+                    alert("Reservation sent! Please send e-transfer now.");
+                    location.reload();
+                }
+                return true;
+            } catch (e) {
+                alert("Error connecting. Try again.");
+                overlay.style.display = 'none';
+                return false;
+            }
+        }
+
+        window.onload = loadBoard;
+    </script>
+</body>
+</html>
