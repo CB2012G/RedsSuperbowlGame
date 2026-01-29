@@ -106,14 +106,13 @@
         }
         .pot-card span { font-size: 32px; font-weight: 900; color: var(--cb-red); }
         
-        /* Unified Header Sizes */
         .col-banner { 
             width: calc(100% - 60px); 
             margin-left: 60px; 
             background: var(--cb-red); 
             color: white; 
             font-weight: 900; 
-            font-size: 20px; /* Matched Size */
+            font-size: 20px; 
             padding: 15px 0; 
             text-align: center; 
             border-radius: 8px 8px 0 0; 
@@ -128,12 +127,12 @@
             transform: rotate(180deg); 
             background: var(--cb-black); 
             color: white; 
-            width: 60px; /* Increased slightly for font size */
+            width: 60px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             font-weight: 900; 
-            font-size: 20px; /* Matched Size */
+            font-size: 20px; 
             border-radius: 8px 0 0 8px; 
             text-transform: uppercase;
         }
@@ -221,11 +220,11 @@
             </div>
             <div class="info-card">
                 <h4>🏟️ HOW IT WORKS</h4>
-                <p>Numbers 0-9 will be randomly assigned to the axes once the board is full. Your square represents the final digit of each team's score.</p>
+                <p>Numbers 0-9 will be randomly assigned once the board is full. 50% of the pool goes to Cheetahs Development and 50% to the winner. If the winning square is unselected, a person will be randomly picked from the participant list.</p>
             </div>
             <div class="info-card">
-                <h4>🏆 THE PRIZES</h4>
-                <p>50% to Cheetahs Development.<br>50% to Payouts.<br><b>Winners every Quarter!</b></p>
+                <h4>🏆 THE PRIZE</h4>
+                <p>50% to Cheetahs Development.<br>50% to Payouts.<br><b>Winner takes the whole pot!</b></p>
             </div>
         </div>
 
@@ -238,8 +237,8 @@
         </div>
 
         <div class="pot-tracker">
-            <div class="pot-card"><small>TOTAL PRIZE POOL</small><br><span id="total-pot">$0.00</span></div>
-            <div class="pot-card"><small>EACH QUARTER</small><br><span id="quarter-payout">$0.00</span></div>
+            <div class="pot-card"><small>TOTAL COLLECTED</small><br><span id="total-pot">$0.00</span></div>
+            <div class="pot-card"><small>WINNER'S POT (50%)</small><br><span id="quarter-payout">$0.00</span></div>
         </div>
 
         <div class="game-wrapper">
@@ -252,7 +251,7 @@
     </div>
 
     <div id="checkout-bar">
-        <input type="text" id="userName" class="input-field" placeholder="Your Full Name">
+        <input type="text" id="userName" class="input-field" placeholder="Player Name">
         <input type="email" id="userEmail" class="input-field" placeholder="Email Address">
         <div style="margin-top:10px; font-weight: 700;">Selected: <span id="count" style="color:var(--accent-gold)">0</span> | Total: <span id="checkout-total" style="color:var(--accent-gold)">$0.00</span></div>
         <button onclick="submitBooking()" class="btn-confirm">Reserve Squares</button>
@@ -260,7 +259,7 @@
 
     <script>
         const CONFIG = {
-            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbycj2AkHdWZZUWlRPOAVH2xvOXr6E3HVc7cP5vx3XLAgX3dQfAJoFGq7rxf46M8njfhOg/exec",
+            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzqIeHzXI66l7nRy0wH6QH2mwqT70no0BuxBbqHVf5IciUzrhAmn4pIaaT3-Um8-E2eAA/exec",
             TEAM_NAME: "Cherry Beach Cheetahs",
             PAYMENT_EMAIL: "cherrybeachcheetahs@gmail.com",
             SQUARE_PRICE: 20.00,
@@ -307,7 +306,6 @@
                     } else if (r === 0 || c === 0) {
                         sq.className = 'sq axis-sq';
                         const axisId = r === 0 ? `COL_${c}` : `ROW_${r}`;
-                        // Check if data exists for this axis and grab the .initials property (the number)
                         if (boardData[axisId] && boardData[axisId].initials !== undefined) {
                             sq.innerText = boardData[axisId].initials;
                         } else {
@@ -352,9 +350,11 @@
 
         function updateStats() {
             const soldCount = Object.keys(boardData).filter(k => k.startsWith('R') && k.includes('C')).length;
-            const totalPrizePool = (soldCount * CONFIG.SQUARE_PRICE) * 0.5;
-            document.getElementById('total-pot').innerText = `$${totalPrizePool.toFixed(2)}`;
-            document.getElementById('quarter-payout').innerText = `$${(totalPrizePool / 4).toFixed(2)}`;
+            const totalCollected = (soldCount * CONFIG.SQUARE_PRICE);
+            const winnersHalf = totalCollected * 0.5;
+
+            document.getElementById('total-pot').innerText = `$${totalCollected.toFixed(2)}`;
+            document.getElementById('quarter-payout').innerText = `$${winnersHalf.toFixed(2)}`;
         }
 
         async function submitBooking() {
@@ -367,17 +367,17 @@
             overlay.style.display = 'flex';
 
             const payload = {
-            action: 'reserve',
-            name: name,
-            email: email,
-            squares: selectedSquares
-        };
+                action: 'reserve',
+                name: name,
+                email: email,
+                squares: selectedSquares
+            };
 
             try {
                 await fetch(CONFIG.SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', 
-                body: JSON.stringify(payload)
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(payload)
                 });
 
                 alert("Reservation sent! Please send your e-transfer now to confirm.");
