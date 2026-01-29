@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -222,8 +221,8 @@ HTML
         <div class="how-to-win-navy">
             <h4>🏅 WINNING COMBINATIONS</h4>
             <ul class="axis-list" style="padding:0;">
-                <li>🔴 <b>Row:</b> Last Digit of <b class="row-team-name">New England Patriots</b></li>
-                <li>⚪ <b>Column:</b> Last Digit of <b class="col-team-name">Seattle Seahawks</b></li>
+                <li>🔴 <b>Row:</b> Last Digit of <b class="row-team-name">Seattle Seahawks</b></li>
+                <li>⚪ <b>Column:</b> Last Digit of <b class="col-team-name">New England Patriots</b></li>
             </ul>
         </div>
 
@@ -233,9 +232,9 @@ HTML
         </div>
 
         <div class="game-wrapper">
-            <div class="col-banner col-team-name">New England Patriots (COLUMNS)</div>
-            <div class="main-row">
-                <div class="row-banner row-team-name">Seattle Seahawks (ROWS)</div>
+            <div class="col-banner col-team-name">New England Patriots</div>
+            <div class="main-row" style="display: flex;">
+                <div class="row-banner row-team-name">Seattle Seahawks</div>
                 <div id="game-board" class="grid"></div>
             </div>
         </div>
@@ -244,138 +243,4 @@ HTML
     <div id="checkout-bar">
         <input type="text" id="userName" class="input-field" placeholder="Player Name">
         <input type="email" id="userEmail" class="input-field" placeholder="Email Address">
-        <div style="margin-top:10px; font-weight: 700;">Selected: <span id="count" style="color:var(--accent-gold)">0</span> | Total: <span id="checkout-total" style="color:var(--accent-gold)">$0.00</span></div>
-        <button onclick="submitBooking()" class="btn-confirm">Reserve Squares</button>
-    </div>
-
-    <script>
-        const CONFIG = {
-            // REPLACE THIS URL with your NEW deployment URL from Apps Script
-            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzqIeHzXI66l7nRy0wH6QH2mwqT70no0BuxBbqHVf5IciUzrhAmn4pIaaT3-Um8-E2eAA/exec",
-            TEAM_NAME: "Cherry Beach Cheetahs",
-            PAYMENT_EMAIL: "cherrybeachcheetahs@gmail.com",
-            SQUARE_PRICE: 20.00,
-            ROW_TEAM: "NFC Champion",
-            COL_TEAM: "AFC Champion"
-        };
-
-        let selectedSquares = [];
-        let boardData = {};
-
-        function init() {
-            document.getElementById('tpl-team-name').innerText = CONFIG.TEAM_NAME;
-            document.getElementById('tpl-email').innerText = CONFIG.PAYMENT_EMAIL;
-            document.querySelectorAll('.tpl-price').forEach(el => el.innerText = CONFIG.SQUARE_PRICE.toFixed(2));
-            document.querySelectorAll('.row-team-name').forEach(el => el.innerText = CONFIG.ROW_TEAM);
-            document.querySelectorAll('.col-team-name').forEach(el => el.innerText = CONFIG.COL_TEAM);
-            loadBoard();
-        }
-
-        async function loadBoard() {
-            const overlay = document.getElementById('loading-overlay');
-            overlay.style.display = 'flex';
-            try {
-                const response = await fetch(`${CONFIG.SCRIPT_URL}?action=getBoard`);
-                boardData = await response.json();
-                document.getElementById('sync-time').innerText = "Last Updated: " + new Date().toLocaleTimeString();
-            } catch (e) { console.error("Sync Error", e); }
-            finally {
-                renderBoard();
-                updateStats();
-                overlay.style.display = 'none';
-            }
-        }
-
-        function renderBoard() {
-            const board = document.getElementById('game-board');
-            board.innerHTML = '';
-            for (let r = 0; r < 11; r++) {
-                for (let c = 0; c < 11; c++) {
-                    const sq = document.createElement('div');
-                    if (r === 0 && c === 0) {
-                        sq.className = 'sq axis-sq';
-                        sq.innerText = '⚽';
-                    } else if (r === 0 || c === 0) {
-                        sq.className = 'sq axis-sq';
-                        const axisId = r === 0 ? `COL_${c}` : `ROW_${r}`;
-                        sq.innerText = boardData[axisId] || '?';
-                    } else {
-                        const squareId = `R${r}C${c}`;
-                        sq.className = 'sq';
-                        if (boardData[squareId]) {
-                            sq.classList.add('taken');
-                            sq.innerText = boardData[squareId].initials || 'X';
-                        } else {
-                            sq.onclick = () => toggleSquare(sq, squareId);
-                            if (selectedSquares.includes(squareId)) sq.classList.add('selected');
-                        }
-                    }
-                    board.appendChild(sq);
-                }
-            }
-        }
-
-        function toggleSquare(element, id) {
-            if (selectedSquares.includes(id)) {
-                selectedSquares = selectedSquares.filter(s => s !== id);
-                element.classList.remove('selected');
-            } else {
-                selectedSquares.push(id);
-                element.classList.add('selected');
-            }
-            updateCheckoutUI();
-        }
-
-        function updateCheckoutUI() {
-            const bar = document.getElementById('checkout-bar');
-            const count = selectedSquares.length;
-            if (count > 0) {
-                bar.style.display = 'block';
-                document.getElementById('count').innerText = count;
-                document.getElementById('checkout-total').innerText = `$${(count * CONFIG.SQUARE_PRICE).toFixed(2)}`;
-            } else { bar.style.display = 'none'; }
-        }
-
-        function updateStats() {
-            const soldCount = Object.keys(boardData).filter(k => k.startsWith('R') && k.includes('C')).length;
-            const totalPrizePool = (soldCount * CONFIG.SQUARE_PRICE) * 0.5;
-            document.getElementById('total-pot').innerText = `$${totalPrizePool.toFixed(2)}`;
-            document.getElementById('quarter-payout').innerText = `$${(totalPrizePool / 4).toFixed(2)}`;
-        }
-
-        async function submitBooking() {
-            const name = document.getElementById('userName').value.trim();
-            const email = document.getElementById('userEmail').value.trim();
-            if (!name || !email || selectedSquares.length === 0) return alert("Please fill in Name, Email and select at least one square.");
-
-            const overlay = document.getElementById('loading-overlay');
-            overlay.innerText = "RESERVING...";
-            overlay.style.display = 'flex';
-
-            const formData = new URLSearchParams();
-            formData.append('action', 'reserve');
-            formData.append('name', name);
-            formData.append('email', email);
-            formData.append('squares', JSON.stringify(selectedSquares));
-
-            try {
-                await fetch(CONFIG.SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: formData.toString()
-                });
-
-                alert("Reservation sent! Please send your e-transfer now to confirm.");
-                selectedSquares = [];
-                setTimeout(() => { location.reload(); }, 1500); 
-            } catch (e) {
-                alert("Error saving reservation.");
-                overlay.style.display = 'none';
-            }
-        }
-
-        window.onload = init;
-    </script>
-</body>
-</html>
+        <div style="margin-top:10px; font-weight: 700
