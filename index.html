@@ -26,31 +26,83 @@
             color: white; 
             padding: 50px 15px; 
             border-bottom: 6px solid var(--cb-red); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7); 
         }
-        .team-brand { 
-            font-weight: 900; 
-            color: var(--cb-red); 
-            letter-spacing: 4px; 
-            font-size: 24px; 
-            text-transform: uppercase; 
-            margin-bottom: 5px; 
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-        .hero-section h1 { 
-            font-size: clamp(2rem, 7vw, 3.5rem); 
-            margin: 5px 0; 
-            font-weight: 900; 
-            letter-spacing: 1px; 
-            text-transform: uppercase; 
-        }
+        .team-brand { font-weight: 900; color: var(--cb-red); letter-spacing: 4px; font-size: 24px; text-transform: uppercase; margin-bottom: 5px; }
+        .hero-section h1 { font-size: clamp(2rem, 7vw, 3.5rem); margin: 5px 0; font-weight: 900; text-transform: uppercase; }
+        
         .container { 
             max-width: 1100px; 
             margin: -35px auto 0 auto; 
             width: 95%; 
             background: var(--cb-white); 
-            padding: 35px; 
+            padding: 25px; 
             border-radius: 12px; 
             box-shadow: 0 25px 50px rgba(0,0,0,0.8); 
-            text-align: left; 
-            box-sizing: border-box;
+            color: #222; 
+        }
+
+        /* Stats & Info */
+        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; text-align: left; }
+        @media (max-width: 850px) { .info-grid { grid-template-columns: 1fr; } }
+        .info-card { background: var(--cb-gray); padding: 15px; border-radius: 8px; border-left: 5px solid var(--cb-red); }
+        .info-card h4 { margin: 0 0 5px 0; font-size: 14px; color: var(--cb-red); text-transform: uppercase; }
+        .info-card p { margin: 0; font-size: 13px; font-weight: 600; }
+
+        .pot-tracker { display: flex; justify-content: space-around; margin: 20px 0; border: 2px solid var(--cb-gray); border-radius: 12px; padding: 15px 0; }
+        .pot-card span { font-size: 28px; font-weight: 900; color: var(--cb-red); }
+
+        /* --- THE GAME BOARD (STABLE GRID VERSION) --- */
+        .game-area {
+            display: grid;
+            grid-template-columns: 60px 1fr; /* Fixed side width, flexible board */
+            grid-template-rows: auto 1fr;   /* Auto top height, flexible board */
+            gap: 0;
+            margin-top: 20px;
+        }
+
+        .col-banner {
+            grid-column: 2; /* Sits above the grid */
+            background: var(--cb-red);
+            color: white;
+            font-weight: 900;
+            font-size: 20px;
+            padding: 15px 0;
+            text-transform: uppercase;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .row-banner {
+            grid-row: 2; /* Sits beside the grid */
+            background: var(--cb-black);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 20px;
+            text-transform: uppercase;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            border-radius: 8px 0 0 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 2px;
+            background: #ccc;
+            padding: 2px;
+        }
+
+        .sq {
+            aspect-ratio: 1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(10px, 2vw, 16px);
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .axis-sq { background
