@@ -361,30 +361,54 @@
             const name = document.getElementById('userName').value.trim();
             const email = document.getElementById('userEmail').value.trim();
             if (!name || !email || selectedSquares.length === 0) return alert("Please fill in Name, Email and select at least one square.");
-
+        
             const overlay = document.getElementById('loading-overlay');
-            overlay.innerText = "RESERVING...";
+            overlay.innerText = "CHECKING AVAILABILITY...";
             overlay.style.display = 'flex';
-
-            const payload = {
-                action: 'reserve',
-                name: name,
-                email: email,
-                squares: selectedSquares
-            };
-
+        
             try {
+                // 1. Fetch the absolute latest board data
+                const response = await fetch(`${CONFIG.SCRIPT_URL}?action=getBoard`);
+                const latestBoard = await response.json();
+        
+                // 2. Cross-reference your selection with latest data
+                let conflict = [];
+                selectedSquares.forEach(sqId => {
+                    if (latestBoard[sqId]) {
+                        conflict.push(sqId);
+                    }
+                });
+        
+                // 3. If someone beat you to it, stop and alert
+                if (conflict.length > 0) {
+                    overlay.style.display = 'none';
+                    alert(`Sorry! The following squares were just reserved by someone else: ${conflict.join(', ')}. The board will now refresh.`);
+                    location.reload(); // Refresh to show the newly taken squares
+                    return;
+                }
+        
+                // 4. If all clear, proceed with reservation
+                overlay.innerText = "RESERVING...";
+                const payload = {
+                    action: 'reserve',
+                    name: name,
+                    email: email,
+                    squares: selectedSquares
+                };
+        
                 await fetch(CONFIG.SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
-
+        
                 alert("Reservation sent! Please send your e-transfer now to confirm.");
                 selectedSquares = [];
                 setTimeout(() => { location.reload(); }, 1500); 
+        
             } catch (e) {
-                alert("Error saving reservation.");
+                console.error("Booking Error:", e);
+                alert("Error connecting to the server. Please try again.");
                 overlay.style.display = 'none';
             }
         }
