@@ -307,7 +307,12 @@
                     } else if (r === 0 || c === 0) {
                         sq.className = 'sq axis-sq';
                         const axisId = r === 0 ? `COL_${c}` : `ROW_${r}`;
-                        sq.innerText = boardData[axisId] || '?';
+                        // Check if data exists for this axis and grab the .initials property (the number)
+                        if (boardData[axisId] && boardData[axisId].initials !== undefined) {
+                            sq.innerText = boardData[axisId].initials;
+                        } else {
+                            sq.innerText = '?';
+                        }
                     } else {
                         const squareId = `R${r}C${c}`;
                         sq.className = 'sq';
