@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cherry Beach RED Cheetahs - Superbowl Squares</title>
+    <title>Cherry Beach Cheetahs - Superbowl Squares</title>
     <style>
         :root { 
             --cb-red: #D22027; 
@@ -193,6 +193,31 @@
             flex-direction: column; align-items: center; justify-content: center; 
             z-index: 9999; color: var(--cb-red); font-weight: 800; font-size: 24px; 
         }
+
+        /* NEW FOOTER STYLE */
+        .thank-you-footer {
+            margin-top: 50px;
+            padding: 30px;
+            border-radius: 8px;
+            background: var(--cb-gray);
+            border-left: 8px solid var(--cb-red);
+            border-right: 8px solid var(--cb-red);
+            text-align: center;
+        }
+        .thank-you-footer h3 {
+            color: var(--cb-black);
+            margin: 0 0 10px 0;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .thank-you-footer p {
+            color: #444;
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -247,6 +272,11 @@
                 <div class="row-banner row-team-name">Seattle Seahawks</div>
                 <div id="game-board" class="grid"></div>
             </div>
+        </div>
+
+        <div class="thank-you-footer">
+            <h3>Thank you for supporting the Cheetahs!</h3>
+            <p>Proceeds directly support team development, tournament, and season costs.</p>
         </div>
     </div>
 
@@ -361,33 +391,27 @@
             const name = document.getElementById('userName').value.trim();
             const email = document.getElementById('userEmail').value.trim();
             if (!name || !email || selectedSquares.length === 0) return alert("Please fill in Name, Email and select at least one square.");
-        
+
             const overlay = document.getElementById('loading-overlay');
             overlay.innerText = "CHECKING AVAILABILITY...";
             overlay.style.display = 'flex';
-        
+
             try {
-                // 1. Fetch the absolute latest board data
                 const response = await fetch(`${CONFIG.SCRIPT_URL}?action=getBoard`);
                 const latestBoard = await response.json();
-        
-                // 2. Cross-reference your selection with latest data
+
                 let conflict = [];
                 selectedSquares.forEach(sqId => {
-                    if (latestBoard[sqId]) {
-                        conflict.push(sqId);
-                    }
+                    if (latestBoard[sqId]) conflict.push(sqId);
                 });
-        
-                // 3. If someone beat you to it, stop and alert
+
                 if (conflict.length > 0) {
                     overlay.style.display = 'none';
-                    alert(`Sorry! The following squares were just reserved by someone else: ${conflict.join(', ')}. The board will now refresh.`);
-                    location.reload(); // Refresh to show the newly taken squares
+                    alert(`Sorry! Squares ${conflict.join(', ')} were just taken. Refreshing now.`);
+                    location.reload();
                     return;
                 }
-        
-                // 4. If all clear, proceed with reservation
+
                 overlay.innerText = "RESERVING...";
                 const payload = {
                     action: 'reserve',
@@ -395,20 +419,19 @@
                     email: email,
                     squares: selectedSquares
                 };
-        
+
                 await fetch(CONFIG.SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
-        
+
                 alert("Reservation sent! Please send your e-transfer now to confirm.");
                 selectedSquares = [];
                 setTimeout(() => { location.reload(); }, 1500); 
-        
+
             } catch (e) {
-                console.error("Booking Error:", e);
-                alert("Error connecting to the server. Please try again.");
+                alert("Error connecting. Please try again.");
                 overlay.style.display = 'none';
             }
         }
