@@ -271,9 +271,10 @@
             </ul>
         </div>
 
-        <div class="pot-tracker">
+        <div class="pot-tracker" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
             <div class="pot-card"><small>TOTAL COLLECTED</small><br><span id="total-pot">$0.00</span></div>
-            <div class="pot-card"><small>WINNER'S POT (50%)</small><br><span id="quarter-payout">$0.00</span></div>
+            <div class="pot-card"><small>HALF-TIME (25%)</small><br><span id="half-payout">$0.00</span></div>
+            <div class="pot-card"><small>FINAL (25%)</small><br><span id="final-payout">$0.00</span></div>
         </div>
 
         <div class="game-wrapper">
@@ -389,12 +390,16 @@
         }
 
         function updateStats() {
+            // Count only actual player squares (IDs starting with R and containing C)
             const soldCount = Object.keys(boardData).filter(k => k.startsWith('R') && k.includes('C')).length;
             const totalCollected = (soldCount * CONFIG.SQUARE_PRICE);
-            const winnersHalf = totalCollected * 0.5;
-
+            
+            // Calculate the 25% splits
+            const quarterSplit = totalCollected * 0.25;
+        
             document.getElementById('total-pot').innerText = `$${totalCollected.toFixed(2)}`;
-            document.getElementById('quarter-payout').innerText = `$${winnersHalf.toFixed(2)}`;
+            document.getElementById('half-payout').innerText = `$${quarterSplit.toFixed(2)}`;
+            document.getElementById('final-payout').innerText = `$${quarterSplit.toFixed(2)}`;
         }
 
         async function submitBooking() {
