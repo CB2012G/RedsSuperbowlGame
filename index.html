@@ -397,9 +397,10 @@
             // Calculate the 25% splits
             const quarterSplit = totalCollected * 0.25;
         
-            document.getElementById('total-pot').innerText = `$${totalCollected.toFixed(2)}`;
-            document.getElementById('half-payout').innerText = `$${quarterSplit.toFixed(2)}`;
-            document.getElementById('final-payout').innerText = `$${quarterSplit.toFixed(2)}`;
+            // Changed .toFixed(2) to .toFixed(0) to remove decimals
+            document.getElementById('total-pot').innerText = `$${totalCollected.toFixed(0)}`;
+            document.getElementById('half-payout').innerText = `$${quarterSplit.toFixed(0)}`;
+            document.getElementById('final-payout').innerText = `$${quarterSplit.toFixed(0)}`;
         }
 
         async function submitBooking() {
