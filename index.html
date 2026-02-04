@@ -110,12 +110,14 @@
         .game-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            margin: 0 -35px;
+            padding: 0 35px;
         }
         
         /* FIXED: Grid container to keep banner and board together */
         .grid-container {
             display: inline-block;
-            min-width: 100%;
+            min-width: 650px;
         }
         
         /* FIXED: Column banner now spans full width */
@@ -155,7 +157,8 @@
             gap: 2px; 
             background: #ddd; 
             padding: 4px; 
-            box-sizing: border-box; 
+            box-sizing: border-box;
+            min-width: 590px;
         }
         .sq { 
             aspect-ratio: 1; 
@@ -168,6 +171,8 @@
             cursor: pointer; 
             color: var(--cb-black);
             transition: 0.2s;
+            min-width: 45px;
+            min-height: 45px;
         }
         .axis-sq { background: var(--cb-gray); color: var(--cb-red); font-weight: 900; cursor: default; }
         .taken { background: #e0e0e0; color: #aaa; cursor: not-allowed; }
